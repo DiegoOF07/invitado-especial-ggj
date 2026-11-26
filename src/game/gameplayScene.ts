@@ -1,20 +1,31 @@
 import Phaser from 'phaser'
 import type { Player } from '../models/player.ts'
+import playerUrl from '../assets/PlayerV2.png'
+import backgroundUrl from '../assets/Background/Background01.png'
+import foregroundUrl from '../assets/Background/Foreground1.png'
+import panelUrl from '../assets/FondoPapel.png'
+import confirmUrl from '../assets/Botones/BotonConfirmar01.png'
+import confirmHoverUrl from '../assets/Botones/BotonConfirmar01Hover.png'
+import cancelUrl from '../assets/Botones/BotonCancelar01.png'
+import cancelHoverUrl from '../assets/Botones/BotonCancelar01Hover.png'
+import clickUrl from '../assets/Audio/Boton_1.mp3'
+import gameplayIntroUrl from '../assets/Audio/Tema_Gameplay_01.mp3'
+import gameplayLoopUrl from '../assets/Audio/Tema_Gameplay_02.mp3'
+import suspectUrl from '../assets/Audio/Mouse_sobre_sospechoso.mp3'
+
+// Rutas que funcionan igual en desarrollo y en el build
+const maskUrls = import.meta.glob<string>('../assets/Masks/mask*.png', { eager: true, query: '?url', import: 'default' })
+const MASKS = Object.entries(maskUrls).map(([path, url]) => ({ key: path.match(/(mask\d+)\.png$/)![1]!, url }))
 
 export class GameplayScene extends Phaser.Scene {
   players: Player[]
   playerContainers = new Map<string, Phaser.GameObjects.Container>()
-  playerSprites = new Map<string, Phaser.GameObjects.Sprite>()
   maskSprites = new Map<string, Phaser.GameObjects.Sprite>()
   modalContainer?: Phaser.GameObjects.Container
   modalOpen = false
 
   sounds!: {
     click: Phaser.Sound.BaseSound
-    click_grave: Phaser.Sound.BaseSound
-    victoria: Phaser.Sound.BaseSound
-    derrota: Phaser.Sound.BaseSound
-    menu: Phaser.Sound.BaseSound
     juego1: Phaser.Sound.BaseSound
     juego2: Phaser.Sound.BaseSound
     sospechoso: Phaser.Sound.BaseSound
@@ -26,48 +37,35 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   preload() {
-    this.load.image('player', '../../src/assets/PlayerV2.png')
-    this.load.image('background', '../../src/assets/Background/Background01.png')
-    this.load.image('foreground', '../../src/assets/Background/Foreground1.png')
-    this.load.image('modal-panel', '../../src/assets/FondoPapel.png')
-    this.load.image('btn-confirm', '../../src/assets/Botones/BotonConfirmar01.png')
-    this.load.image('btn-confirm-hover', '../../src/assets/Botones/BotonConfirmar01Hover.png')
-    this.load.image('btn-cancel', '../../src/assets/Botones/BotonCancelar01.png')
-    this.load.image('btn-cancel-hover', '../../src/assets/Botones/BotonCancelar01Hover.png')
-    
+    this.load.image('player', playerUrl)
+    this.load.image('background', backgroundUrl)
+    this.load.image('foreground', foregroundUrl)
+    this.load.image('modal-panel', panelUrl)
+    this.load.image('btn-confirm', confirmUrl)
+    this.load.image('btn-confirm-hover', confirmHoverUrl)
+    this.load.image('btn-cancel', cancelUrl)
+    this.load.image('btn-cancel-hover', cancelHoverUrl)
 
-    this.load.audio('click', '../../src/assets/Audio/Boton_1.wav')
-    this.load.audio('click_grave', '../../src/assets/Audio/Boton_2.wav')
-    this.load.audio('victoria', '../../src/assets/Audio/Stinger_Victoria.wav')
-    this.load.audio('derrota', '../../src/assets/Audio/Stinger_Derrota.wav')
-    this.load.audio('menu', '../../src/assets/Audio/Tema_Menu .wav')
-    this.load.audio('juego1', '../../src/assets/Audio/Tema_Gameplay_01.wav')
-    this.load.audio('juego2', '../../src/assets/Audio/Tema_Gameplay_02.wav')
-    this.load.audio('sospechoso', '../../src/assets/Audio/Mouse_sobre_sospechoso.mp3')
+    this.load.audio('click', clickUrl)
+    this.load.audio('juego1', gameplayIntroUrl)
+    this.load.audio('juego2', gameplayLoopUrl)
+    this.load.audio('sospechoso', suspectUrl)
 
-    for (let i = 1; i <= 10; i++) {
-      this.load.image(
-        `mask${i}`,
-        `../../src/assets/masks/mask${i}.png`
-      )
-    }
+    for (const mask of MASKS) this.load.image(mask.key, mask.url)
   }
 
   create() {
     const bg = this.add.image(640, 360, 'background');
 
-     this.sounds = {
+    this.sounds = {
       click: this.sound.add('click', { loop: false, volume: 0.75 }),
-      click_grave: this.sound.add('click_grave'),
-      victoria: this.sound.add('victoria'),
-      derrota: this.sound.add('derrota'),
-      menu: this.sound.add('menu', { loop: true, volume: 0.5 }),
       juego1: this.sound.add('juego1', { loop: false, volume: 0.5 }),
       juego2: this.sound.add('juego2', { loop: true, volume: 0.5 }),
-      sospechoso: this.sound.add('sospechoso', {loop: false, volume: 1} )
+      sospechoso: this.sound.add('sospechoso', { loop: false, volume: 1 })
     }
+    // El tema arranca una vez y sigue con su versión en bucle
+    this.sounds.juego1.once('complete', () => this.sounds.juego2.play())
     this.sounds.juego1.play()
-    this.sounds.juego2.play()
 
     const scaleX = this.scale.width / bg.width
     const scaleY = this.scale.height / bg.height
@@ -186,49 +184,18 @@ export class GameplayScene extends Phaser.Scene {
 
 
   getRandomMask(): string {
-    const index = Phaser.Math.Between(1, 10)
-    return `mask${index}`
-  }
-
-  onDeletePlayer = (event: Event) => {
-    const customEvent = event as CustomEvent<string>
-    const playerName = customEvent.detail
-
-    const sprite = this.playerSprites.get(playerName)
-    if (!sprite) return
-  
-    sprite.setTint(0x808080)
-    sprite.disableInteractive()
-  }
-
-  shutdown() {
-    this.playerSprites.clear()
-  }
-
-  disableInput() {
-    this.playerSprites.forEach(sprite => {
-      sprite.disableInteractive()
-    })
-  }
-
-  enableInput() {
-    this.playerSprites.forEach(sprite => {
-      sprite.setInteractive({ useHandCursor: true })
-    })
+    return Phaser.Utils.Array.GetRandom(MASKS).key
   }
 
   closeModal() {
     this.modalOpen = false
     this.modalContainer?.destroy()
     this.modalContainer = undefined
-
-    this.enableInput()
   }
 
 
   openConfirmModal(player: Player) {
     this.modalOpen = true
-    this.disableInput()
 
     const { width, height } = this.scale
 

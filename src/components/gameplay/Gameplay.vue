@@ -177,7 +177,7 @@ onUnmounted(() => {
 <style scoped>
   .presentation-phase {
     position: relative;
-    background-image: url('../src/assets/Telegrama.png');
+    background-image: url('@/assets/Telegrama.png');
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
