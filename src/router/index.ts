@@ -1,8 +1,7 @@
-import Gameplay from '../components/gameplay/Gameplay.vue'
 import GameSettings from '../components/gamesettings/GameSettings.vue'
 import MainMenu from '../components/mainmenu/MainMenu.vue'
 import Result from '../components/screens/Result.vue'
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -18,7 +17,8 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/gameplay',
     name: 'gameplay',
-    component: Gameplay
+    // Phaser solo se descarga al empezar la partida
+    component: () => import('../components/gameplay/Gameplay.vue')
   },
   {
     path: '/result',
@@ -28,7 +28,7 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes
 })
 
