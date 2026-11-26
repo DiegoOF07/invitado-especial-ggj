@@ -11,7 +11,7 @@
 
       <p class="subtitle">{{ subtitle }}</p>
 
-      <button class="continue" @click="goHome">
+      <button class="continue" @click="goHome" @mouseenter="isHover = true" @mouseleave="isHover = false">
         <img
           :src="buttonImage"
           alt="Continuar"
@@ -23,8 +23,13 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { playClick, playResult } from '../../game/audio'
+import victoryImage from '@/assets/Background/FondoVictoria.png'
+import defeatImage from '@/assets/Background/FondoDerrota.png'
+import continueImage from '@/assets/Botones/BotonContinuar01.png'
+import continueHoverImage from '@/assets/Botones/BotonContinuar01Hover.png'
 
 const router = useRouter()
 const route = useRoute()
@@ -37,21 +42,16 @@ const subtitle = computed(() =>
     : 'El impostor no fue encontrado a tiempo'
 )
 
-const imageSrc = computed(() =>
-  resultType.value === 'victory'
-    ? new URL('@/assets/Background/FondoVictoria.png', import.meta.url).href
-    : new URL('@/assets/Background/FondoDerrota.png', import.meta.url).href
-)
+const imageSrc = computed(() => (resultType.value === 'victory' ? victoryImage : defeatImage))
 
 const isHover = ref(false)
 
-const buttonImage = computed(() =>
-  isHover.value
-    ? new URL('@/assets/Botones/BotonContinuar01.png', import.meta.url).href
-    : new URL('@/assets/Botones/BotonContinuar01Hover.png', import.meta.url).href
-)
+const buttonImage = computed(() => (isHover.value ? continueHoverImage : continueImage))
+
+onMounted(() => playResult(resultType.value === 'victory' ? 'victory' : 'defeat'))
 
 const goHome = () => {
+  playClick()
   router.push('/')
 }
 </script>

@@ -1,5 +1,10 @@
+import clickUrl from '@/assets/Audio/Boton_1.mp3'
+import menuUrl from '@/assets/Audio/Tema_Menu.mp3'
+import victoryUrl from '@/assets/Audio/Stinger_Victoria.mp3'
+import defeatUrl from '@/assets/Audio/Stinger_Derrota.mp3'
+
 const clickAudio = new Audio(
-  new URL('@/assets/Audio/Boton_1.wav', import.meta.url).href
+  clickUrl
 )
 clickAudio.volume = 0.7
 
@@ -9,7 +14,7 @@ export function playClick() {
 }
 
 const menuSong = new Audio(
-  new URL('@/assets/Audio/Tema_Menu .wav', import.meta.url).href
+  menuUrl
 )
 
 menuSong.loop = true
@@ -25,4 +30,10 @@ export function playMenuSong() {
 export function stopMenuSong() {
   menuSong.pause()
   menuSong.currentTime = 0
+}
+
+export function playResult(result: 'victory' | 'defeat') {
+  const stinger = new Audio(result === 'victory' ? victoryUrl : defeatUrl)
+  stinger.volume = 0.7
+  stinger.play().catch(() => {})
 }
